@@ -33,6 +33,9 @@ import {makeId, getRandomString, getPlayerPrefix} from './util.js';
 import JSON6 from 'json-6';
 import {rarityColors, initialPosY} from './constants.js';
 
+import {CapsuleGeometry} from './CapsuleGeometry.js';
+import {getHeight} from './avatars/util.mjs';
+
 const localVector = new THREE.Vector3();
 const localVector2 = new THREE.Vector3();
 const localVector2D = new THREE.Vector2();
@@ -52,6 +55,7 @@ class App extends THREE.Object3D {
     this.components = [];
     // cleanup tracking
     this.physicsObjects = [];
+    this.debugCapsule = null;
     this.lastMatrix = new THREE.Matrix4();
   }
   getComponent(key) {
@@ -592,20 +596,43 @@ metaversefile.setApi({
         //size = localVector2;
         
         const physicsObject = addCapsuleGeometry.call(this, position, quaternion, radius, halfHeight, physicsMaterial, ccdEnabled);
-        //physicsObject.position.copy(app.position);
-        //physicsObject.quaternion.copy(app.quaternion);
+        physicsObject.position.copy(app.position);
+        physicsObject.quaternion.copy(app.quaternion);
         //physicsObject.scale.copy(app.scale);
         
         const {physicsMesh} = physicsObject;
         physicsMesh.position.copy(basePosition);
         physicsMesh.quaternion.copy(baseQuaternion);
+
+
         //physicsMesh.scale.copy(baseScale);
         // app.add(physicsObject);
         physicsObject.updateMatrixWorld();
+
+
+        /*const debugCapsule = new THREE.Mesh(
+          new CapsuleGeometry(radius, radius, halfHeight*2), new THREE.MeshNormalMaterial()
+        );
+
+        const localPlayer = metaversefile.useLocalPlayer();
+
+        if(localPlayer.avatar) {
+          if(localPlayer.avatar.height) {
+            console.log(localPlayer.avatar.height);
+          }
+        }
+
+        ///
+        app.add(debugCapsule);
+        app.debugCapsule = debugCapsule;
+        app.debugCapsule.position.copy(basePosition);
+        app.debugCapsule.quaternion.copy(baseQuaternion);
+        ///*/
         
         app.physicsObjects.push(physicsObject);
 
         // physicsManager.pushUpdate(app, physicsObject);
+        //physicsManager.setTransform(physicsObject);
         return physicsObject;
       })(physics.addCapsuleGeometry);
       physics.addSphereGeometry = (addSphereGeometry => function(position, quaternion, radius, physicsMaterial, ccdEnabled) {
@@ -622,8 +649,8 @@ metaversefile.setApi({
         //size = localVector2;
         
         const physicsObject = addSphereGeometry.call(this, position, quaternion, radius, physicsMaterial, ccdEnabled);
-        physicsObject.position.copy(app.position);
-        physicsObject.quaternion.copy(app.quaternion);
+        //physicsObject.position.copy(app.position);
+        //physicsObject.quaternion.copy(app.quaternion);
         //physicsObject.scale.copy(app.scale);
         
         const {physicsMesh} = physicsObject;
@@ -681,6 +708,13 @@ metaversefile.setApi({
         app.physicsObjects.push(physicsObject);
         return physicsObject;
       })(physics.addCookedConvexGeometry);
+      physics.disablePhysicsObject = (disablePhysicsObject => function(physicsObject) {
+        disablePhysicsObject.call(this, physicsObject);
+      })(physics.disablePhysicsObject);
+
+      physics.setTransform = (setTransform => function(physicsObject) {
+        setTransform.call(this, physicsObject);
+      })(physics.setTransform);
       /* physics.getPhysicsTransform = (getPhysicsTransform => function(physicsId) {
         const transform = getPhysicsTransform.apply(this, arguments);
         const {position, quaternion} = transform;
@@ -860,6 +894,9 @@ export default () => {
     return world.appManager.getPhysicsObjectByPhysicsId.apply(world.appManager, arguments) ||
        localPlayer.appManager.getPhysicsObjectByPhysicsId.apply(localPlayer.appManager, arguments) ||
        remotePlayers.some(remotePlayer => remotePlayer.appManager.getPhysicsObjectByPhysicsId.apply(remotePlayer.appManager, arguments));
+  },
+  getAvatarHeight(obj) {
+    return getHeight(obj);
   },
   useInternals() {
     if (!iframeContainer) {
