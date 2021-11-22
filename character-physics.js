@@ -30,6 +30,7 @@ class CharacterPhysics {
   constructor(player) {
     this.player = player;
     this.rb = null;
+    this.debugCapsule = null;
 
     this.velocity = new THREE.Vector3();
     this.sitOffset = new THREE.Vector3();
@@ -56,7 +57,7 @@ class CharacterPhysics {
         .add(localVector2.set(0, -avatarHeight * 0.5, 0));
       const radius = 0.3 / 1.6 * avatarHeight;
       const halfHeight = Math.max(avatarHeight * 0.5 - radius, 0);
-      return physx.physxWorker.collidePhysics(physx.physics, radius, halfHeight, localVector, q, 10);
+      return physx.physxWorker.collidePhysics(physx.physics, radius, halfHeight, localVector, q, 12);
     };
   })()
   applyAvatarPhysicsDetail(
@@ -67,6 +68,7 @@ class CharacterPhysics {
     if (this.player.avatar && physicsManager.physicsEnabled) {
 
       this.rb = this.player.avatar.app.physicsObjects[0];
+      //this.debugCapsule = this.player.avatar.app.debugCapsule;;
 
       if(!this.rb) return;
 
@@ -134,7 +136,7 @@ class CharacterPhysics {
               _ensureNoJumpAction();
             } 
           } else if (!jumpAction) {
-            _ensureJumpAction();
+            //_ensureJumpAction();
           }
         } else if (!jumpAction && this.velocity.y < -4) {
           _ensureJumpAction();
@@ -190,7 +192,7 @@ class CharacterPhysics {
 
       /*if(this.debugCapsule) {
         this.debugCapsule.position.copy(this.rb.position);
-        this.debugCapsule.quaternion.copy(this.rb.quaternion);
+        //this.debugCapsule.quaternion.copy(this.rb.quaternion);
       }*/
 
       if (this.avatar) {
@@ -302,8 +304,8 @@ class CharacterPhysics {
     camera.updateMatrixWorld();
   }
   updateRigidbody() {
-    this.updateTransform();
     this.updateVelocity();
+    this.updateTransform();
   }
   update(timeDiffS) {
     this.applyGravity(timeDiffS);
