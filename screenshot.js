@@ -239,6 +239,7 @@ const _getType = id => {
 };
 
 (async () => {
+  console.time('Downloading Asset');
   await Avatar.waitForLoad();
 
   const animations = metaversefileApi.useAvatarAnimations();
@@ -278,6 +279,8 @@ const _getType = id => {
   } catch (err) {
     console.warn(err);
   }
+
+  console.timeEnd('Downloading Asset');
   const ext = o ? o.appType : '';
   const isVrm = ext === 'vrm';
   const isImage = ['png', 'jpg'].includes(ext);
@@ -317,6 +320,7 @@ const _getType = id => {
 
   try {
     if (type === 'png' || type === 'jpg' || type === 'jpeg') {
+      console.time('Render');
       const canvas = await (async () => {
         if (['glb', 'vrm', 'vox'].includes(ext)) {
           const {renderer, scene, camera} = _makeRenderer(width, height);
@@ -393,17 +397,22 @@ const _getType = id => {
       screenshotResult.appendChild(img);
 
       const arrayBuffer = await blob.arrayBuffer();
+      console.timeEnd('Render');
 
       // console.log('png blob arrayBuffer', blob.size, arrayBuffer.byteLength);
 
       if (dst) {
+        console.time('Uploading Asset');
         fetch(dst, {
           method: 'POST',
           headers: {
             'Content-Type': mimeType,
           },
           body: arrayBuffer,
-        }).then(res => res.blob());
+        }).then((res) => {
+          console.timeEnd('Uploading Asset');
+          res.blob();
+        });
       }
 
       window.parent.postMessage({
