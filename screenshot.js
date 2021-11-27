@@ -239,8 +239,9 @@ const _getType = id => {
 };
 
 (async () => {
-  console.time('Downloading Asset');
+  console.time('[Test1] Avatar wait for load');
   await Avatar.waitForLoad();
+  console.timeEnd('[Test1] Avatar wait for load');
 
   const animations = metaversefileApi.useAvatarAnimations();
   // const walkAnimation = animations.find(a => a.name === 'walking.fbx');
@@ -261,11 +262,18 @@ const _getType = id => {
   if (isNaN(height)) {
     height = defaultHeight;
   }
-  
+
   let o;
   try {
+    console.time('[Test1] Metaverse file load');
+
     const app = await metaversefileApi.load(url);
+
+    console.timeEnd('[Test1] Metaverse file load');
+
     if (app.appType === 'vrm') {
+      console.time('[Test1] VRM processing');
+
       await app.setSkinning(true);
       const avatar = new Avatar(app.skinnedVrm, {
         fingers: true,
@@ -274,13 +282,14 @@ const _getType = id => {
         debug: false,
       });
       app.avatar = avatar;
+      console.timeEnd('[Test1] VRM processing');
+
     }
     o = app;
   } catch (err) {
     console.warn(err);
   }
 
-  console.timeEnd('Downloading Asset');
   const ext = o ? o.appType : '';
   const isVrm = ext === 'vrm';
   const isImage = ['png', 'jpg'].includes(ext);
@@ -320,7 +329,7 @@ const _getType = id => {
 
   try {
     if (type === 'png' || type === 'jpg' || type === 'jpeg') {
-      console.time('Render');
+      console.time('[Test1] Render');
       const canvas = await (async () => {
         if (['glb', 'vrm', 'vox'].includes(ext)) {
           const {renderer, scene, camera} = _makeRenderer(width, height);
@@ -397,7 +406,7 @@ const _getType = id => {
       screenshotResult.appendChild(img);
 
       const arrayBuffer = await blob.arrayBuffer();
-      console.timeEnd('Render');
+      console.timeEnd('[Test1] Render');
 
       // console.log('png blob arrayBuffer', blob.size, arrayBuffer.byteLength);
 
